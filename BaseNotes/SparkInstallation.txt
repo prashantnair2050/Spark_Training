@@ -1,0 +1,72 @@
+Spark Installation
+===================
+1) Untar the tar file
+
+	tar -xvf spark-1.6.0-bin-hadoop2.6.tar
+
+2) Rename the extracted folder
+
+	 mv spark-1.6.0-bin-hadoop2.6 spark
+
+
+3) Append the spark path to .bashrc.
+
+	vi .bashrc
+	
+	export PATH=$PATH:/home/spark/spark/bin
+	export PATH=$PATH:/home/spark/spark/sbin
+	
+
+4) Create a log directory
+		
+	mkdir -p /home/spark/sparkdata/logs
+	
+
+5) Create tmp directory for spark
+
+	mkdir -p /home/spark/sparkdata/tmp
+
+6) Configure Spark 
+	
+	cd spark/conf
+	
+	vi spark-env.sh
+	
+	export HADOOP_CONF_DIR=/home/spark/hadoop2/etc/hadoop
+	export YARN_CONF_DIR=/home/spark/hadoop2/etc/hadoop
+	export SPARK_LOG_DIR=/home/spark/sparkdata/logs
+	export SPARK_WORKER_DIR=/home/spark/sparkdata/tmp
+	
+	export SPARK_WORKER_INSTANCES=1 
+	export SPARK_MASTER_MEMORY=400m
+	export SPARK_EXECUTOR_MEMORY=400m
+	export SPARK_WORKER_MEMORY=400m
+	export SPARK_WORKER_CORES=2
+	export SPARK_EXECUTOR_CORES=1
+
+13) Configure Slaves in Spark. in Node1 (Master Machine)
+	
+	vi /home/spark/spark/conf/slaves
+	node2
+	node3
+
+
+
+Start Hadoop Services
+
+hadoop-daemon.sh start namenode
+hadoop-daemon.sh start datanode
+yarn-daemon.sh start resourcemanager
+yarn-daemon.sh start nodemanager
+
+
+localhost:50070 --- NN
+localhost:8088  --- RM
+
+
+To Start Spark Services (Use node1)
+
+start-master.sh ---- Spark Master ---- 8080
+
+start-slaves.sh ---- Spark Workers/Executors
+
