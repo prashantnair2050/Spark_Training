@@ -1,0 +1,118 @@
+Steps for Distributed Hadoop Setup
+=======================================
+
+1) Create 3 clones 
+
+2) Delete and recreate hdfsdrive ( All the machines)
+	
+		rm -rf hdfsdrive
+		mkdir hdfsdrive
+
+3) Setup hostname and hosts file (DNS names are highly recommended for Hadoop and Spark in Multinode cluster)
+
+	sudo vi /etc/hosts    (All 3 systems)
+	
+	Note: Delete the line 127.0.1.1 from the hosts file and add the following (Put correct IPs)
+	
+		192.168.1.1		node1
+		192.168.1.2		node2
+		192.168.1.3 	node3
+		
+	
+	sudo vi /etc/hostname
+	
+	Delete existing and replace the same with node1,node2 and node3 respectively for each machine.
+	
+	Restart the system	
+		
+			sudo init 6
+			
+			
+3) Setup core-site.xml ( In all 3 systems . Please note the fs.default.name is set to node1 since it will hold 
+						the NN service)
+
+
+vi /home/spark/hadoop2/etc/hadoop/core-site.xml
+
+<property>
+<name>fs.default.name</name>
+<value>hdfs://node1:8020</value>
+<final>true</final>
+</property>
+
+ <property>
+<name>hadoop.proxyuser.hadoop.hosts</name>
+<value>master</value>
+</property>
+
+<property>
+<name>hadoop.proxyuser.hadoop.groups</name>
+<value>users</value>
+</property
+
+<property>
+<name>hadoop.tmp.dir</name>
+<value>/home/hadoop/hdfsdrive</value>
+</property>	
+	
+	
+4) Setup yarn-site.xml in all VMs
+	
+vi /home/spark/hadoop2/etc/hadoop/yarn-site.xml
+
+<property>
+    <name>yarn.nodemanager.aux-services</name>
+    <value>mapreduce_shuffle</value>
+  </property>
+  <property>
+    <name>yarn.nodemanager.aux-services.mapreduce.shuffle.class</name>
+    <value>org.apache.hadoop.mapred.ShuffleHandler</value>
+  </property>
+
+<property>
+    <name>yarn.resourcemanager.resource-tracker.address</name>
+    <value>node1:8025</value>
+  </property>
+  <property>
+    <name>yarn.resourcemanager.scheduler.address</name>
+    <value>node1:8030</value>
+  </property>
+  <property>
+    <name>yarn.resourcemanager.address</name>
+    <value>node1:8040</value>
+  </property>
+  
+5) Configure Slaves in Node1 only
+ 
+ vi /home/spark/hadoop2/etc/hadoop/slaves
+node2
+node3
+	
+	
+	
+6) Create a passwordless setup ( Required for Hadoop and Spark )
+(Do it in Node1 only)
+
+ssh-keygen ( Press Enter 4 times blindly )
+ssh-copy-id -i /home/spark/.ssh/id_rsa.pub spark@node1
+ssh-copy-id -i /home/spark/.ssh/id_rsa.pub spark@node2
+ssh-copy-id -i /home/spark/.ssh/id_rsa.pub spark@node3
+	
+	
+	
+7) Format the namenode (Only in node1)
+
+hadoop namenode -format
+
+8) Start Hadoop services (Only in node1)
+
+hadoop-daemon.sh start namenode
+hadoop-daemons.sh start datanode
+yarn-daemon.sh start resourcemanager
+yarn-daemons.sh start nodemanager
+
+WebUIs
+======
+
+NameNode --- http://ip-address-of-NN:50070
+YARN ------- http://ip-address-of-RM:8088
